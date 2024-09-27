@@ -1,0 +1,4 @@
+#ifndef MY_STACK_PROTECTION_H_
+#define MY_STACK_PROTECTION_H_
+
+#endif // MY_STACK_PROTECTION_H_
