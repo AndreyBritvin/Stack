@@ -2,7 +2,7 @@
 
 int main()
 {
-    stack_dump();
+    test_stack();
 
     return 0;
 }
