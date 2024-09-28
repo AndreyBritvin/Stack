@@ -4,19 +4,8 @@
 #define CANARY_PROTECTION
 #define HASH_PROTECTION
 
-#ifdef CANARY_PROTECTION
-#define CAN_PROT(...) __VA_ARGS__
-#else
-#define CAN_PROT(...)
-#endif
-
-#ifdef HASH_PROTECTION
-#define HASH_PROT(...) __VA_ARGS__
-#else
-#define HASH_PROT(...)
-#endif
-
 #include <stdlib.h>
+#include "my_stack_protection.h"
 
 enum stack_state
 {
@@ -43,9 +32,13 @@ typedef double stack_elem_t;
 
 struct my_stack_t
 {
+    CANARY_PROT(canary_t canary_left;)
     size_t              size;
     size_t          capacity;
     stack_elem_t       *data;
+    HASH_PROT(hash_t buffer_hash;)
+    HASH_PROT(hash_t struct_hash;)
+    CANARY_PROT(canary_t canary_right;)
 };
 
 static const int ALLOC_CONST = 2;

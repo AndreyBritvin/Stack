@@ -5,50 +5,78 @@
 #include <assert.h>
 #include <string.h>
 
+const char * const BEGIN_DUMP = "[----------------BEGIN STACK_DUMP----------------]";
+const char * const END_DUMP   = "[-----------------END STACK_DUMP-----------------]";
 
 stack_errors stack_dump(my_stack_t *stack)
 {
-    int stack_error = stack_verify(stack);
+    //stack_verify(stack);
+    DUMP_PRINT("\n%s\n", BEGIN_DUMP);
 
-    printf("\n[----------------BEGIN STACK_DUMP----------------]\n");
-
-    if (!stack)
+    if (stack == NULL)
     {
-        printf("Stack_ptr = NULL\n");
-        printf("[-----------------END STACK_DUMP-----------------]\n\n");
+        DUMP_PRINT("Stack_ptr [%p]\n", stack);
+        DUMP_PRINT("%s\n\n", END_DUMP);
 
         return ERROR_STACK_NULL_PTR;
     }
 
-    printf("Stack capacity: %lu\n", stack->capacity);
-    printf("Stack size    : %lu\n", stack->size);
+    DUMP_PRINT("Stack_t[%p] born at" DEBUG_ON("WHERE?") "called from ...TODO\n", stack); //TODO
+    CANARY_PROT(DUMP_PRINT("Canary #1 = %llx\n", stack->canary_left);)
+    DUMP_PRINT("Stack capacity: %lu\n", stack->capacity);
+    DUMP_PRINT("Stack size    : %lu\n", stack->size);
+    DUMP_PRINT("Stack->data [%p]\n", stack->data);
 
-    if(!stack->data)
+    if(stack->data == NULL)
     {
-        printf("Stack->data = NULL\n");
-        printf("[-----------------END STACK_DUMP-----------------]\n\n");
+        DUMP_PRINT("%s\n\n", END_DUMP);
 
         return ERROR_STACK_DATA_NULL;
     }
 
-    printf("Stack Data:\n");
-    for (size_t i = 0; i < stack->size; i++)
+    CANARY_PROT(DUMP_PRINT("data canary #1 = %llx\n{\n", (canary_t)stack->data[-1]);)
+
+    for (size_t i = 0; i < stack->capacity; i++)
     {
-        printf("i = %lu elem = %lf \n", i, stack->data[i]);
+        if (i < stack->size)
+        {
+            DUMP_PRINT("   *[i] = %lu elem = %lf \n", i, stack->data[i]);
+        }
+        else
+        {
+            DUMP_PRINT("    [i] = %lu elem = %lf \n", i, stack->data[i]);
+        }
     }
 
-    printf("[-----------------END STACK_DUMP-----------------]\n\n");
+    CANARY_PROT(DUMP_PRINT("}\ndata canary #2 = %llx\n", (canary_t)stack->data[stack->capacity]);)
+
+    CANARY_PROT(DUMP_PRINT("Canary #2 = %llx\n", stack->canary_right);)
+    DUMP_PRINT("%s\n\n", END_DUMP);
 
     return SUCCESS;
 }
 
 stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size)
 {
-    stack_verify(stack);
+    if (stack == NULL)
+    {
+        PRINT_ERROR(ERROR_STACK_NULL_PTR);
+
+        return ERROR_STACK_NULL_PTR;
+    }
 
     stack->capacity = capacity;
     stack->size = NULL_POS;
-    stack->data = (stack_elem_t *) calloc(capacity, el_size);
+    stack->data = (stack_elem_t *) calloc(1, el_size * capacity CANARY_PROT(+ sizeof(canary_t) * 2));
+
+    stack_verify(stack);
+
+    CANARY_PROT(stack->data[0]            = (canary_t) CANARY_HEXSPEAK ^ (canary_t) stack->data;)
+    CANARY_PROT(stack->data[capacity + 1] = (canary_t) CANARY_HEXSPEAK ^ (canary_t) stack->data;)
+    CANARY_PROT(stack->data++;)
+
+    CANARY_PROT(stack->canary_left  = (canary_t) CANARY_HEXSPEAK ^ (canary_t) stack;)
+    CANARY_PROT(stack->canary_right = (canary_t) CANARY_HEXSPEAK ^ (canary_t) stack;)
 
     stack_verify(stack);
 
@@ -59,9 +87,9 @@ stack_errors stack_dtor(my_stack_t *stack)
 {
     stack_verify(stack);
 
-    memset(stack->data, 0, sizeof(stack->data[0]) * stack->capacity);
+    memset(stack->data, 0, sizeof(stack->data[0]) * stack->capacity); // REDO canary?
 
-    free(stack->data); stack->data = NULL;
+    free(stack->data CANARY_PROT(-1)); stack->data = NULL;
     stack->size = NULL_POS;
     stack->capacity = 0;
 
@@ -113,11 +141,13 @@ stack_errors stack_realloc(my_stack_t *stack, stack_state state)
     {
         case PUSHING:
             DEBUG_PRINT("Increasing memory!!!\n");
-            stack->data = (stack_elem_t *) realloc(stack->data, (stack->capacity *= ALLOC_CONST) * sizeof(stack_elem_t));
+            stack->data = (stack_elem_t *) realloc(stack->data CANARY_PROT(- 1), (stack->capacity *= ALLOC_CONST) * sizeof(stack_elem_t)
+                                                                    CANARY_PROT(+ 2 * sizeof(canary_t))) CANARY_PROT(+ 1);
             break;
         case POPING:
             DEBUG_PRINT("Decreasing memory :( ):\n");
-            stack->data = (stack_elem_t *) realloc(stack->data, (stack->capacity /= (2 * ALLOC_CONST)) * sizeof(stack_elem_t));
+            stack->data = (stack_elem_t *) realloc(stack->data CANARY_PROT(- 1), (stack->capacity /= (2 * ALLOC_CONST)) * sizeof(stack_elem_t)
+                                                                                 CANARY_PROT(+ 2 * sizeof(canary_t))) CANARY_PROT(+ 1);
             break;
         default:
             PRINT_ERROR(ERROR_STACK_STATE_NOT_EXIST);
