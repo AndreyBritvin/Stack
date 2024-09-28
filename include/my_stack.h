@@ -1,6 +1,21 @@
 #ifndef MY_STACK_H_
 #define MY_STACK_H_
 
+#define CANARY_PROTECTION
+#define HASH_PROTECTION
+
+#ifdef CANARY_PROTECTION
+#define CAN_PROT(...) __VA_ARGS__
+#else
+#define CAN_PROT(...)
+#endif
+
+#ifdef HASH_PROTECTION
+#define HASH_PROT(...) __VA_ARGS__
+#else
+#define HASH_PROT(...)
+#endif
+
 #include <stdlib.h>
 
 enum stack_state

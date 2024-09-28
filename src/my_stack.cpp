@@ -68,7 +68,7 @@ stack_errors stack_dtor(my_stack_t *stack)
     return SUCCESS;
 }
 
-stack_errors stack_pop(my_stack_t *stack, stack_elem_t *el_to_pop)
+stack_errors stack_pop(my_stack_t *stack, stack_elem_t *el_to_pop) // TODO:
 {
     assert(el_to_pop != NULL);
 
