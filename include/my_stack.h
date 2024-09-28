@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 #include "my_stack_protection.h"
+#include "my_macros.h"
 
 enum stack_state
 {
@@ -43,15 +44,15 @@ struct my_stack_t
 
 static const int ALLOC_CONST = 2;
 
-enum stack_errors stack_dump(my_stack_t *stack);
-enum stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size);
-enum stack_errors stack_dtor(my_stack_t *stack);
+stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const char *funcname, int codeline));
+stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size);
+stack_errors stack_dtor(my_stack_t *stack);
 
-enum stack_errors stack_pop(my_stack_t *stack, stack_elem_t *el_to_pop);
-enum stack_errors stack_push(my_stack_t *stack, stack_elem_t el_to_push);
+stack_errors stack_pop(my_stack_t *stack, stack_elem_t *el_to_pop);
+stack_errors stack_push(my_stack_t *stack, stack_elem_t el_to_push);
 
-enum stack_errors stack_verify(my_stack_t *stack);
-enum stack_errors stack_realloc(my_stack_t *stack, stack_state state);
-enum stack_errors test_stack();
+stack_errors stack_verify(my_stack_t *stack);
+static stack_errors stack_realloc(my_stack_t *stack, stack_state state);
+stack_errors test_stack();
 
 #endif // MY_STACK_H_

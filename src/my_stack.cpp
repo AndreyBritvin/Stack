@@ -1,5 +1,4 @@
 #include "my_stack.h"
-#include "my_macros.h"
 
 #include <stdio.h>
 #include <assert.h>
@@ -8,7 +7,7 @@
 const char * const BEGIN_DUMP = "[----------------BEGIN STACK_DUMP----------------]";
 const char * const END_DUMP   = "[-----------------END STACK_DUMP-----------------]";
 
-stack_errors stack_dump(my_stack_t *stack)
+stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const char *funcname, int codeline))
 {
     //stack_verify(stack);
     DUMP_PRINT("\n%s\n", BEGIN_DUMP);
@@ -21,7 +20,9 @@ stack_errors stack_dump(my_stack_t *stack)
         return ERROR_STACK_NULL_PTR;
     }
 
-    DUMP_PRINT("Stack_t[%p] born at" DEBUG_ON("WHERE?") "called from ...TODO\n", stack); //TODO
+    DUMP_PRINT("Stack_t[%p] born at" DEBUG_ON("WHERE") "called from "
+                                     DEBUG_ON("%s:%d function:[%s()]") "\n", stack,
+                                     DEBUG_ON(filename, codeline, funcname)); //TODO
     CANARY_PROT(DUMP_PRINT("Canary #1 = %llx\n", stack->canary_left);)
     DUMP_PRINT("Stack capacity: %lu\n", stack->capacity);
     DUMP_PRINT("Stack size    : %lu\n", stack->size);
@@ -29,6 +30,7 @@ stack_errors stack_dump(my_stack_t *stack)
 
     if(stack->data == NULL)
     {
+        CANARY_PROT(DUMP_PRINT("Canary #2 = %llx\n", stack->canary_right);)
         DUMP_PRINT("%s\n\n", END_DUMP);
 
         return ERROR_STACK_DATA_NULL;
@@ -71,8 +73,8 @@ stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size)
 
     stack_verify(stack);
 
-    CANARY_PROT(stack->data[0]            = (canary_t) CANARY_HEXSPEAK ^ (canary_t) stack->data;)
-    CANARY_PROT(stack->data[capacity + 1] = (canary_t) CANARY_HEXSPEAK ^ (canary_t) stack->data;)
+    CANARY_PROT(stack->data[0]            = (stack_elem_t) ((canary_t) CANARY_HEXSPEAK ^ (canary_t) stack->data);)
+    CANARY_PROT(stack->data[capacity + 1] = (stack_elem_t) ((canary_t) CANARY_HEXSPEAK ^ (canary_t) stack->data);)
     CANARY_PROT(stack->data++;)
 
     CANARY_PROT(stack->canary_left  = (canary_t) CANARY_HEXSPEAK ^ (canary_t) stack;)
@@ -133,7 +135,7 @@ stack_errors stack_push(my_stack_t *stack, stack_elem_t el_to_push)
     return SUCCESS;
 }
 
-stack_errors stack_realloc(my_stack_t *stack, stack_state state)
+static stack_errors stack_realloc(my_stack_t *stack, stack_state state)
 {
     stack_verify(stack);
 
@@ -156,7 +158,7 @@ stack_errors stack_realloc(my_stack_t *stack, stack_state state)
     }
 
     stack_verify(stack);
-    stack_dump(stack);
+    STACK_DUMP(stack);
 
     return SUCCESS;
 }
@@ -191,7 +193,7 @@ stack_errors stack_verify(my_stack_t *stack)
 #define CHECK_STACK if(!STACK_ERR) STACK_ERR =
 #define END_STACK_CHECKING(macro_my_stack) if(STACK_ERR) {                                    \
                                 printf("During stack checking error #%d occured", STACK_ERR); \
-                                stack_dump(macro_my_stack);                                   \
+                                STACK_DUMP(macro_my_stack);                                   \
                                 }
 
 enum stack_errors test_stack()
@@ -202,19 +204,19 @@ enum stack_errors test_stack()
     BEGIN_STACK_CHECKING
     CHECK_STACK stack_ctor(&my_stack, 3, sizeof(stack_elem_t));
     // my_stack.data = (stack_elem_t *) realloc(my_stack.data, );
-    CHECK_STACK stack_dump(&my_stack);
+    CHECK_STACK STACK_DUMP(&my_stack);
     for (int i = 1; i < 11; i++)
     {
         CHECK_STACK stack_push(&my_stack, i);
-        CHECK_STACK stack_dump(&my_stack);
+        CHECK_STACK STACK_DUMP(&my_stack);
     }
     for (int i = 1; i < 11; i++)
     {
         CHECK_STACK stack_pop(&my_stack, &to_pop);
-        CHECK_STACK stack_dump(&my_stack);
+        CHECK_STACK STACK_DUMP(&my_stack);
     }
     CHECK_STACK stack_dtor(&my_stack);
-    CHECK_STACK stack_dump(&my_stack);
+    CHECK_STACK STACK_DUMP(&my_stack);
     END_STACK_CHECKING(&my_stack)
 
     return SUCCESS;

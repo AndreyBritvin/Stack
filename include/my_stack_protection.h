@@ -18,5 +18,8 @@
 
 typedef unsigned long long hash_t;
 typedef unsigned long long canary_t;
+typedef char byte;
+
+hash_t hash(void *void_arr_to_hash, size_t arr_size);
 
 #endif // MY_STACK_PROTECTION_H_
