@@ -22,6 +22,11 @@ enum stack_errors
     ERROR_STACK_NULL_PTR        = 3,
     ERROR_STACK_DATA_NULL       = 4,
     ERROR_STACK_STATE_NOT_EXIST = 5,
+    ERROR_STRUCT_CANARY_DIED    = 6,
+    ERROR_BUFFER_CANARY_DIED    = 7,
+    ERROR_HASH_IN_STRUCT        = 8,
+    ERROR_HASH_IN_BUFFER        = 9,
+    ERROR_STACK_UNDERFLOW       = 10,
 };
 
 enum stack_pos
@@ -54,5 +59,12 @@ stack_errors stack_push(my_stack_t *stack, stack_elem_t el_to_push);
 stack_errors stack_verify(my_stack_t *stack);
 static stack_errors stack_realloc(my_stack_t *stack, stack_state state);
 stack_errors test_stack();
+
+#ifdef HASH_PROTECTION
+static stack_errors recalc_hash(my_stack_t *stack);
+static hash_t calc_buffer_hash(my_stack_t *stack);
+static hash_t calc_struct_hash(my_stack_t *stack);
+
+#endif // HASH_PROTECTION
 
 #endif // MY_STACK_H_

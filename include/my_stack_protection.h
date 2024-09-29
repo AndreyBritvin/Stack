@@ -1,9 +1,13 @@
 #ifndef MY_STACK_PROTECTION_H_
 #define MY_STACK_PROTECTION_H_
 
+#define GREEN_COLOR "\033[0;32m"
+#define RED_COLOR   "\033[0;31m"
+
 #ifdef CANARY_PROTECTION
 #define CANARY_HEXSPEAK 0xDEADBABE
 #define CANARY_PROT(...) __VA_ARGS__
+#define DATA_CANARY (stack_elem_t) ((canary_t) CANARY_HEXSPEAK ^ (canary_t) stack->data)
 #else
 #define CANARY_PROT(...)
 #endif
