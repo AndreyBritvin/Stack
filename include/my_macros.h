@@ -12,6 +12,7 @@
                                             ERROR, __FILE__, __func__, __LINE__);
     #define BEGIN_VERIFY stack_errors ST_ERR = SUCCESS;
     #define STACK_VERIFY(stack_) ST_ERR = SUCCESS; if((ST_ERR = stack_verify(stack_)) != SUCCESS){return ST_ERR;}
+    #define INIT_STACK(stack) stack.filename = __FILE__; stack.funcname = __func__; stack.linenum = __LINE__; stack.stack_name = #stack;
 
 #else
     #define DEBUG_ON(...)

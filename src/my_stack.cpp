@@ -20,8 +20,10 @@ stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const
         return ERROR_STACK_NULL_PTR;
     }
 
-    DUMP_PRINT("Stack_t[%p] born at" DEBUG_ON("WHERE") "called from "
+    DUMP_PRINT("Stack_t[%p] " DEBUG_ON("\"%s\" born at %s:%lu function:[%s()] ") "called from "
                                      DEBUG_ON("%s:%d function:[%s()]") "\n", stack,
+                                     DEBUG_ON(stack->stack_name,)
+                                     DEBUG_ON(stack->filename, stack->linenum, stack->funcname,)
                                      DEBUG_ON(filename, codeline, funcname)); //TODO
     CANARY_PROT(DUMP_PRINT("Canary #1 = %llx\n", stack->canary_left);)
     DUMP_PRINT("Stack capacity: %lu\n", stack->capacity);
@@ -55,11 +57,11 @@ stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const
     {
         if (i < stack->size)
         {
-            DUMP_PRINT("   *[i] = %lu elem = %lf \n", i, stack->data[i]);
+            DUMP_PRINT("   *[i] = %lu elem = %lf (%lx)\n", i, stack->data[i], *(size_t *)&stack->data[i]);
         }
         else
         {
-            DUMP_PRINT("    [i] = %lu elem = %lf \n", i, stack->data[i]);
+            DUMP_PRINT("    [i] = %lu elem = %lf (%lx)\n", i, stack->data[i], *(size_t *)&stack->data[i]);
         }
     }
 
@@ -93,14 +95,10 @@ stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size)
     CANARY_PROT(stack->canary_right = (canary_t) CANARY_HEXSPEAK ^ (canary_t) stack;)
 
     HASH_PROT(
-    hash_t hash_buffer_val = calc_buffer_hash(stack);
-    stack->buffer_hash = hash_buffer_val;
+    recalc_hash(stack);
 
-    hash_t hash_struct_val = calc_struct_hash(stack);
-    stack->struct_hash = hash_struct_val;
-
-    DEBUG_PRINT("Hash struct val = %llx\n", hash_struct_val);
-    DEBUG_PRINT("Hash buffer val = %llx\n", hash_buffer_val);
+    DEBUG_PRINT("Hash struct val = %llx\n", stack->struct_hash);
+    DEBUG_PRINT("Hash buffer val = %llx\n", stack->buffer_hash);
     )
 
     STACK_VERIFY(stack);
@@ -145,6 +143,7 @@ stack_errors stack_pop(my_stack_t *stack, stack_elem_t *el_to_pop) // TODO:
     }
 
     *el_to_pop = stack->data[stack->size - 1];
+    stack->data[stack->size - 1] = STACK_POISON_VALUE;
     stack->size--;
 
     recalc_hash(stack);
@@ -212,6 +211,7 @@ static stack_errors stack_realloc(my_stack_t *stack, stack_state state)
         return ERROR_STACK_DATA_NULL;
     }
 
+    stack->data[-1]              = DATA_CANARY;
     stack->data[stack->capacity] = DATA_CANARY;
     recalc_hash(stack);
     STACK_VERIFY(stack);
@@ -252,16 +252,14 @@ stack_errors stack_verify(my_stack_t *stack)
     }
     )
 
-    /*
     CANARY_PROT(
-    if ((canary_t)stack->data[-1] != (canary_t) stack->data[stack->capacity + 1])
+    if ((canary_t)stack->data[-1] != (canary_t) stack->data[stack->capacity])
     {
         PRINT_ERROR(ERROR_BUFFER_CANARY_DIED);
 
         return      ERROR_BUFFER_CANARY_DIED;
     }
     )
-*/
 
     HASH_PROT(
     if (stack->struct_hash != calc_struct_hash(stack))
@@ -311,14 +309,15 @@ static hash_t calc_buffer_hash(my_stack_t *stack)
 #define CHECK_STACK if(!STACK_ERR) STACK_ERR =
 #define END_STACK_CHECKING(macro_my_stack) if(STACK_ERR) {                                    \
                                 printf("During stack checking error #%d occured", STACK_ERR); \
-                                STACK_DUMP(macro_my_stack); \
-                                stack_dtor(macro_my_stack);\
-                                return STACK_ERR;                                    \
+                                STACK_DUMP(macro_my_stack);                                   \
+                                stack_dtor(macro_my_stack);                                   \
+                                return STACK_ERR;                                             \
                                 }
 
 enum stack_errors test_stack()
 {
     my_stack_t my_stack = {};
+    INIT_STACK(my_stack);
     stack_elem_t to_pop = 0;
 
     BEGIN_STACK_CHECKING

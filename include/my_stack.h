@@ -43,11 +43,13 @@ struct my_stack_t
     size_t          capacity;
     stack_elem_t       *data;
     HASH_PROT(hash_t buffer_hash;)
-    HASH_PROT(hash_t struct_hash;)
+    HASH_PROT(hash_t struct_hash;) // no hash after this var
+    DEBUG_ON(const char *filename; const char *funcname; size_t linenum; const char *stack_name;)
     CANARY_PROT(canary_t canary_right;)
 };
 
 static const int ALLOC_CONST = 2;
+static const int STACK_POISON_VALUE = 'DEDNELOH';
 
 stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const char *funcname, int codeline));
 stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size);
