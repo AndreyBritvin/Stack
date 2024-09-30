@@ -38,6 +38,11 @@ stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const
         CANARY_PROT(DUMP_PRINT("Canary #2 = %llx\n", stack->canary_right);)
         DUMP_PRINT("%s\n\n", END_DUMP);
 
+        if (stack->capacity == 0)
+        {
+            return SUCCESS;
+        }
+
         return ERROR_STACK_DATA_NULL;
     }
 
@@ -142,12 +147,13 @@ stack_errors stack_pop(my_stack_t *stack, stack_elem_t *el_to_pop) // TODO:
     *el_to_pop = stack->data[stack->size - 1];
     stack->size--;
 
+    recalc_hash(stack);
+
     if (stack->size <= stack->capacity / (2 * ALLOC_CONST))
     {
         stack_realloc(stack, POPING);
     }
 
-    recalc_hash(stack);
     STACK_VERIFY(stack);
     DEBUG_PRINT("Quit stack_pop\n");
 
@@ -169,7 +175,6 @@ stack_errors stack_push(my_stack_t *stack, stack_elem_t el_to_push)
         stack_realloc(stack, PUSHING);
     }
 
-    recalc_hash(stack);
     STACK_VERIFY(stack);
 
     DEBUG_PRINT("Quit stack_push\n");
