@@ -148,7 +148,7 @@ stack_errors stack_pop(my_stack_t *stack, stack_elem_t *el_to_pop) // TODO:
 
     if(stack->size == STACK_POISON_VALUE)
     {
-        stack->data = (stack_elem_t *) STACK_POISON_VALUE;
+        *el_to_pop = (stack_elem_t) STACK_POISON_VALUE;
     }
 
     HASH_PROT(recalc_hash(stack));
