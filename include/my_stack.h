@@ -49,7 +49,7 @@ struct my_stack_t
 };
 
 static const int ALLOC_CONST = 2;
-static const int STACK_POISON_VALUE = 'DEDNELOH' / 1000;
+static const int STACK_POISON_VALUE = 'DEDNELOH' / 1000000;
 
 stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const char *funcname, int codeline));
 stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size);

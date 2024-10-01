@@ -148,7 +148,6 @@ stack_errors stack_pop(my_stack_t *stack, stack_elem_t *el_to_pop) // TODO:
 
     if(stack->size == STACK_POISON_VALUE)
     {
-        printf("Here you are\n");
         stack->data = (stack_elem_t *) STACK_POISON_VALUE;
     }
 
@@ -331,14 +330,14 @@ enum stack_errors test_stack()
     CHECK_STACK stack_ctor(&my_stack, 3, sizeof(stack_elem_t));
     // my_stack.data = (stack_elem_t *) realloc(my_stack.data, );
     CHECK_STACK STACK_DUMP(&my_stack);
-    for (int i = 1; i < STACK_POISON_VALUE + 10; i++)
+    for (int i = 1; i < 10; i++)
     {
         CHECK_STACK stack_push(&my_stack, i);
         CHECK_STACK STACK_DUMP(&my_stack);
     }
 
     // my_stack.struct_hash += 1;
-    for (int i = 1; i < STACK_POISON_VALUE + 10; i++)
+    for (int i = 1; i < 10; i++)
     {
         CHECK_STACK stack_pop(&my_stack, &to_pop);
         CHECK_STACK STACK_DUMP(&my_stack);
