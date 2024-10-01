@@ -1,4 +1,5 @@
 #include "my_stack.h"
+#include <stdio.h>
 
 int main()
 {

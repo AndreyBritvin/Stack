@@ -78,6 +78,17 @@ stack_errors stack_pop(my_stack_t *stack, stack_elem_t *el_to_pop) // TODO:
     *el_to_pop = stack->data[stack->size - 1];
     stack->size--;
 
+<<<<<<< Updated upstream
+=======
+    if(stack->size == STACK_POISON_VALUE)
+    {
+        printf("Here you are\n");
+        stack->data = (stack_elem_t *) STACK_POISON_VALUE;
+    }
+
+    HASH_PROT(recalc_hash(stack));
+
+>>>>>>> Stashed changes
     if (stack->size <= stack->capacity / (2 * ALLOC_CONST))
     {
         stack_realloc(stack, POPING);
@@ -95,6 +106,11 @@ stack_errors stack_push(my_stack_t *stack, stack_elem_t el_to_push)
     stack->data[stack->size] = el_to_push;
     stack->size++;
 
+<<<<<<< Updated upstream
+=======
+    HASH_PROT(recalc_hash(stack));
+
+>>>>>>> Stashed changes
     if (stack->size >= stack->capacity)
     {
         stack_realloc(stack, PUSHING);
@@ -125,8 +141,24 @@ stack_errors stack_realloc(my_stack_t *stack, stack_state state)
             return ERROR_STACK_STATE_NOT_EXIST;
     }
 
+<<<<<<< Updated upstream
     stack_verify(stack);
     stack_dump(stack);
+=======
+    if (stack->data == NULL)
+    {
+        PRINT_ERROR(ERROR_STACK_DATA_NULL);
+
+        return ERROR_STACK_DATA_NULL;
+    }
+
+    CANARY_PROT(stack->data[-1]              = DATA_CANARY);
+    CANARY_PROT(stack->data[stack->capacity] = DATA_CANARY);
+
+    HASH_PROT(recalc_hash(stack));
+    STACK_VERIFY(stack);
+    STACK_DUMP(stack);
+>>>>>>> Stashed changes
 
     return SUCCESS;
 }
@@ -172,13 +204,24 @@ enum stack_errors test_stack()
     BEGIN_STACK_CHECKING
     CHECK_STACK stack_ctor(&my_stack, 3, sizeof(stack_elem_t));
     // my_stack.data = (stack_elem_t *) realloc(my_stack.data, );
+<<<<<<< Updated upstream
     CHECK_STACK stack_dump(&my_stack);
     for (int i = 1; i < 11; i++)
+=======
+    CHECK_STACK STACK_DUMP(&my_stack);
+    for (int i = 1; i < STACK_POISON_VALUE + 10; i++)
+>>>>>>> Stashed changes
     {
         CHECK_STACK stack_push(&my_stack, i);
         CHECK_STACK stack_dump(&my_stack);
     }
+<<<<<<< Updated upstream
     for (int i = 1; i < 11; i++)
+=======
+
+    // my_stack.struct_hash += 1;
+    for (int i = 1; i < STACK_POISON_VALUE + 10; i++)
+>>>>>>> Stashed changes
     {
         CHECK_STACK stack_pop(&my_stack, &to_pop);
         CHECK_STACK stack_dump(&my_stack);

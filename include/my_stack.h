@@ -49,6 +49,10 @@ struct my_stack_t
 };
 
 static const int ALLOC_CONST = 2;
+<<<<<<< Updated upstream
+=======
+static const int STACK_POISON_VALUE = 'DEDNELOH' / 100000;
+>>>>>>> Stashed changes
 
 enum stack_errors stack_dump(my_stack_t *stack);
 enum stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size);

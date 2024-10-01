@@ -4,7 +4,13 @@
 #ifdef CANARY_PROTECTION
 #define CANARY_DBG(...) __VA_ARGS__
 #else
+<<<<<<< Updated upstream
 #define CANARY_DBG(...)
+=======
+#define CANARY_HEXSPEAK
+#define CANARY_PROT(...)
+#define DATA_CANARY
+>>>>>>> Stashed changes
 #endif
 
 #ifdef HASH_PROTECTION
