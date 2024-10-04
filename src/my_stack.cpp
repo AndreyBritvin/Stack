@@ -60,10 +60,10 @@ stack_errors stack_dump(my_stack_t *stack, dump_print_t dump_func DEBUG_ON(, con
 
     CANARY_PROT(DUMP_PRINT("data canary #1 = %llx\n{\n", (canary_t)stack->data[-1]);)
 
-    void *delta_ptr = stack->data;
+    // void *delta_ptr = stack->data;
     for (size_t i = 0; i < stack->capacity; i++)
     {
-        delta_ptr = dump_func(stack->data, i, stack->size, stack->elem_size);
+        dump_func(stack->data, i, stack->size, stack->elem_size);
     }
 
     CANARY_PROT(DUMP_PRINT("}\ndata canary #2 = %llx\n", (canary_t)stack->data[stack->capacity]);)
@@ -231,20 +231,6 @@ stack_errors stack_verify(my_stack_t *stack)
         return      ERROR_STACK_NULL_PTR;
     }
 
-    if (stack->size > stack->capacity)
-    {
-        PRINT_ERROR(ERROR_SIZE_MORE_CAPACITY);
-
-        return      ERROR_SIZE_MORE_CAPACITY;
-    }
-
-    if (stack->data == NULL && stack->capacity != 0)
-    {
-        PRINT_ERROR(ERROR_ALLOC_FAILED);
-
-        return      ERROR_ALLOC_FAILED;
-    }
-
     HASH_PROT(
     if (stack->struct_hash != calc_struct_hash(stack))
     {
@@ -254,21 +240,40 @@ stack_errors stack_verify(my_stack_t *stack)
     }
     )
 
-    HASH_PROT(
-    if (stack->buffer_hash != calc_buffer_hash(stack))
-    {
-        PRINT_ERROR(ERROR_HASH_IN_BUFFER);
-
-        return      ERROR_HASH_IN_BUFFER;
-    }
-    )
-
     CANARY_PROT(
     if (stack->canary_left != STACK_CANARY_VALUE || stack->canary_right != STACK_CANARY_VALUE)
     {
         PRINT_ERROR(ERROR_STRUCT_CANARY_DIED);
 
         return      ERROR_STRUCT_CANARY_DIED;
+    }
+    )
+
+    if (stack->size > stack->capacity)
+    {
+        PRINT_ERROR(ERROR_SIZE_MORE_CAPACITY);
+
+        return      ERROR_SIZE_MORE_CAPACITY;
+    }
+
+    if (stack->data == NULL && stack->capacity == 0)
+    {
+        return SUCCESS;
+    }
+
+    if (stack->data == NULL)
+    {
+        PRINT_ERROR(ERROR_ALLOC_FAILED);
+
+        return      ERROR_ALLOC_FAILED;
+    }
+
+    HASH_PROT(
+    if (stack->buffer_hash != calc_buffer_hash(stack))
+    {
+        PRINT_ERROR(ERROR_HASH_IN_BUFFER);
+
+        return      ERROR_HASH_IN_BUFFER;
     }
     )
 
@@ -352,11 +357,11 @@ void *print_longs(void *void_begin_ptr, size_t iteration, size_t size, size_t el
 
     if (iteration < size)
     {
-        DUMP_PRINT("   *[i] = %lu elem = %lld (%lx)\n", iteration, *(double *)(cur_ptr), *(size_t *)(cur_ptr));
+        DUMP_PRINT("   *[i] = %lu elem = %lld (%lx)\n", iteration, *(long long *)(cur_ptr), *(size_t *)(cur_ptr));
     }
     else
     {
-        DUMP_PRINT("    [i] = %lu elem = %lld (%lx)\n", iteration, *(double *)(cur_ptr), *(size_t *)(cur_ptr));
+        DUMP_PRINT("    [i] = %lu elem = %lld (%lx)\n", iteration, *(long long *)(cur_ptr), *(size_t *)(cur_ptr));
     }
 
     return cur_ptr;
