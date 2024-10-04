@@ -59,14 +59,6 @@ stack_errors stack_pop(my_stack_t *stack, stack_elem_t *el_to_pop);
 stack_errors stack_push(my_stack_t *stack, stack_elem_t el_to_push);
 
 stack_errors stack_verify(my_stack_t *stack);
-static stack_errors stack_realloc(my_stack_t *stack, stack_state state);
 stack_errors test_stack();
-
-#ifdef HASH_PROTECTION
-static stack_errors recalc_hash(my_stack_t *stack);
-static hash_t calc_buffer_hash(my_stack_t *stack);
-static hash_t calc_struct_hash(my_stack_t *stack);
-
-#endif // HASH_PROTECTION
 
 #endif // MY_STACK_H_

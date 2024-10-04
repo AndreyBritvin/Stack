@@ -4,6 +4,14 @@
 #include <assert.h>
 #include <string.h>
 
+static stack_errors stack_realloc(my_stack_t *stack, stack_state state);
+#ifdef HASH_PROTECTION
+static stack_errors recalc_hash(my_stack_t *stack);
+static hash_t calc_buffer_hash(my_stack_t *stack);
+static hash_t calc_struct_hash(my_stack_t *stack);
+
+#endif // HASH_PROTECTION
+
 const char * const BEGIN_DUMP = "[----------------BEGIN STACK_DUMP----------------]";
 const char * const END_DUMP   = "[-----------------END STACK_DUMP-----------------]";
 
@@ -24,14 +32,13 @@ stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const
                                      DEBUG_ON("%s:%d function:[%s()]") "\n", stack,
                                      DEBUG_ON(stack->stack_name,)
                                      DEBUG_ON(stack->filename, stack->linenum, stack->funcname,)
-                                     DEBUG_ON(filename, codeline, funcname)); //TODO
+                                     DEBUG_ON(filename, codeline, funcname));
     CANARY_PROT(DUMP_PRINT("Canary #1 = %llx\n", stack->canary_left);)
     DUMP_PRINT("Stack capacity: %lu\n", stack->capacity);
     DUMP_PRINT("Stack size    : %lu\n\n", stack->size);
 
     HASH_PROT(DUMP_PRINT("CalcSt hash = %llx\n", calc_struct_hash(stack));)
     HASH_PROT(DUMP_PRINT("Struct hash = %llx\n\n", stack->struct_hash);)
-
 
     DUMP_PRINT("Stack->data [%p]\n", stack->data);
 
@@ -243,24 +250,6 @@ stack_errors stack_verify(my_stack_t *stack)
         return      ERROR_ALLOC_FAILED;
     }
 
-    CANARY_PROT(
-    if (stack->canary_left != stack->canary_right)
-    {
-        PRINT_ERROR(ERROR_STRUCT_CANARY_DIED);
-
-        return      ERROR_STRUCT_CANARY_DIED;
-    }
-    )
-
-    CANARY_PROT(
-    if ((canary_t)stack->data[-1] != (canary_t) stack->data[stack->capacity])
-    {
-        PRINT_ERROR(ERROR_BUFFER_CANARY_DIED);
-
-        return      ERROR_BUFFER_CANARY_DIED;
-    }
-    )
-
     HASH_PROT(
     if (stack->struct_hash != calc_struct_hash(stack))
     {
@@ -276,6 +265,24 @@ stack_errors stack_verify(my_stack_t *stack)
         PRINT_ERROR(ERROR_HASH_IN_BUFFER);
 
         return      ERROR_HASH_IN_BUFFER;
+    }
+    )
+
+    CANARY_PROT(
+    if (stack->canary_left != stack->canary_right)
+    {
+        PRINT_ERROR(ERROR_STRUCT_CANARY_DIED);
+
+        return      ERROR_STRUCT_CANARY_DIED;
+    }
+    )
+
+    CANARY_PROT(
+    if ((canary_t)stack->data[-1] != (canary_t) stack->data[stack->capacity])
+    {
+        PRINT_ERROR(ERROR_BUFFER_CANARY_DIED);
+
+        return      ERROR_BUFFER_CANARY_DIED;
     }
     )
 
