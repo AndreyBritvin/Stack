@@ -322,7 +322,7 @@ static hash_t calc_struct_hash(my_stack_t *stack)
 
 static hash_t calc_buffer_hash(my_stack_t *stack)
 {
-    return hash(stack->data - 1, stack->capacity * sizeof(stack_elem_t) CANARY_PROT(+ 2 * sizeof(canary_t)));
+    return hash(stack->data CANARY_PROT(- 1), stack->capacity * sizeof(stack_elem_t) CANARY_PROT(+ 2 * sizeof(canary_t)));
 }
 
 #endif // HASH_PROTECTION
