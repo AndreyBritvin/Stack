@@ -34,13 +34,15 @@ enum stack_pos
     NULL_POS = 0,
 };
 
-typedef double stack_elem_t;
+typedef long long stack_elem_t;
+typedef void *(*dump_print_t)(void *void_begin_ptr, size_t iteration, size_t size, size_t el_size);
 
 struct my_stack_t
 {
     CANARY_PROT(canary_t canary_left;)
     size_t              size;
     size_t          capacity;
+    size_t         elem_size;
     stack_elem_t       *data;
     HASH_PROT(hash_t buffer_hash;)
     HASH_PROT(hash_t struct_hash;) // no hash after this var
@@ -51,7 +53,7 @@ struct my_stack_t
 static const int ALLOC_CONST = 2;
 static const int STACK_POISON_VALUE = 'DEDNELOH';
 
-stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const char *funcname, int codeline));
+stack_errors stack_dump(my_stack_t *stack, dump_print_t dump_func DEBUG_ON(, const char *filename, const char *funcname, int codeline));
 stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size);
 stack_errors stack_dtor(my_stack_t *stack);
 
@@ -60,5 +62,8 @@ stack_errors stack_push(my_stack_t *stack, stack_elem_t el_to_push);
 
 stack_errors stack_verify(my_stack_t *stack);
 stack_errors test_stack();
+
+void *print_doubles(void *void_begin_ptr, size_t iteration, size_t size, size_t el_size);
+void *print_longs  (void *void_begin_ptr, size_t iteration, size_t size, size_t el_size);
 
 #endif // MY_STACK_H_

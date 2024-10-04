@@ -15,7 +15,7 @@ static hash_t calc_struct_hash(my_stack_t *stack);
 const char * const BEGIN_DUMP = "[----------------BEGIN STACK_DUMP----------------]";
 const char * const END_DUMP   = "[-----------------END STACK_DUMP-----------------]";
 
-stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const char *funcname, int codeline))
+stack_errors stack_dump(my_stack_t *stack, dump_print_t dump_func DEBUG_ON(, const char *filename, const char *funcname, int codeline))
 {
     //STACK_VERIFY(stack);
     DUMP_PRINT("\n%s\n", BEGIN_DUMP);
@@ -60,16 +60,10 @@ stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const
 
     CANARY_PROT(DUMP_PRINT("data canary #1 = %llx\n{\n", (canary_t)stack->data[-1]);)
 
+    void *delta_ptr = stack->data;
     for (size_t i = 0; i < stack->capacity; i++)
     {
-        if (i < stack->size)
-        {
-            DUMP_PRINT("   *[i] = %lu elem = %lf (%lx)\n", i, stack->data[i], *(size_t *)&stack->data[i]);
-        }
-        else
-        {
-            DUMP_PRINT("    [i] = %lu elem = %lf (%lx)\n", i, stack->data[i], *(size_t *)&stack->data[i]);
-        }
+        delta_ptr = dump_func(stack->data, i, stack->size, stack->elem_size);
     }
 
     CANARY_PROT(DUMP_PRINT("}\ndata canary #2 = %llx\n", (canary_t)stack->data[stack->capacity]);)
@@ -90,16 +84,17 @@ stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size)
         return ERROR_STACK_NULL_PTR;
     }
 
-    stack->capacity = capacity;
-    stack->size = NULL_POS;
+    stack->capacity  = capacity;
+    stack->elem_size = el_size;
+    stack->size      = NULL_POS;
     stack->data = (stack_elem_t *) calloc(el_size * capacity CANARY_PROT(+ sizeof(canary_t) * 2), sizeof(char));
 
-    CANARY_PROT(stack->data[0]            = DATA_CANARY;)
-    CANARY_PROT(stack->data[capacity + 1] = DATA_CANARY;)
     CANARY_PROT(stack->data++;)
+    CANARY_PROT(stack->data[-1]       = (stack_elem_t) DATA_CANARY;)
+    CANARY_PROT(stack->data[capacity] = (stack_elem_t) DATA_CANARY;)
 
-    CANARY_PROT(stack->canary_left  = (canary_t) CANARY_HEXSPEAK ^ (canary_t) stack;)
-    CANARY_PROT(stack->canary_right = (canary_t) CANARY_HEXSPEAK ^ (canary_t) stack;)
+    CANARY_PROT(stack->canary_left  = STACK_CANARY_VALUE;)
+    CANARY_PROT(stack->canary_right = STACK_CANARY_VALUE;)
 
     HASH_PROT(
     recalc_hash(stack);
@@ -218,8 +213,8 @@ static stack_errors stack_realloc(my_stack_t *stack, stack_state state)
         return ERROR_STACK_DATA_NULL;
     }
 
-    stack->data[-1]              = DATA_CANARY;
-    stack->data[stack->capacity] = DATA_CANARY;
+    stack->data[-1]              = (stack_elem_t) DATA_CANARY;
+    stack->data[stack->capacity] = (stack_elem_t) DATA_CANARY;
     recalc_hash(stack);
     STACK_VERIFY(stack);
     STACK_DUMP(stack);
@@ -269,7 +264,7 @@ stack_errors stack_verify(my_stack_t *stack)
     )
 
     CANARY_PROT(
-    if (stack->canary_left != stack->canary_right)
+    if (stack->canary_left != STACK_CANARY_VALUE || stack->canary_right != STACK_CANARY_VALUE)
     {
         PRINT_ERROR(ERROR_STRUCT_CANARY_DIED);
 
@@ -278,10 +273,18 @@ stack_errors stack_verify(my_stack_t *stack)
     )
 
     CANARY_PROT(
-    if ((canary_t)stack->data[-1] != (canary_t) stack->data[stack->capacity])
+    canary_t temp_can_value = DATA_CANARY;
+
+    // printf("Canary_left_data  = %llx\n"
+        //    "Canary_temp_data  = %llx\n", (canary_t) stack->data[-1], temp_can_value);
+    // printf("Canary_right_data = %llx\n"
+        //    "Canary_temp_data  = %llx\n", (canary_t) stack->data[stack->capacity], temp_can_value);
+
+    if (   memcmp(&stack->data[-1],              &temp_can_value, sizeof(canary_t))
+        || memcmp(&stack->data[stack->capacity], &temp_can_value, sizeof(canary_t)))
     {
         PRINT_ERROR(ERROR_BUFFER_CANARY_DIED);
-
+        // printf("Memcmp value: %d, \n", memcmp(&stack->data[-1], &temp_can_value, sizeof(canary_t)));
         return      ERROR_BUFFER_CANARY_DIED;
     }
     )
@@ -320,6 +323,44 @@ static hash_t calc_buffer_hash(my_stack_t *stack)
                                 stack_dtor(macro_my_stack);                                   \
                                 return STACK_ERR;                                             \
                                 }
+
+void *print_doubles(void *void_begin_ptr, size_t iteration, size_t size, size_t el_size)
+{
+    assert(void_begin_ptr != NULL);
+
+    char *begin_ptr = (char *)void_begin_ptr;
+    char *cur_ptr = begin_ptr + iteration * el_size;
+
+    if (iteration < size)
+    {
+        DUMP_PRINT("   *[i] = %lu elem = %lf (%lx)\n", iteration, *(double *)(cur_ptr), *(size_t *)(cur_ptr));
+    }
+    else
+    {
+        DUMP_PRINT("    [i] = %lu elem = %lf (%lx)\n", iteration, *(double *)(cur_ptr), *(size_t *)(cur_ptr));
+    }
+
+    return cur_ptr;
+}
+
+void *print_longs(void *void_begin_ptr, size_t iteration, size_t size, size_t el_size)
+{
+    assert(void_begin_ptr != NULL);
+
+    char *begin_ptr = (char *)void_begin_ptr;
+    char *cur_ptr = begin_ptr + iteration * el_size;
+
+    if (iteration < size)
+    {
+        DUMP_PRINT("   *[i] = %lu elem = %lld (%lx)\n", iteration, *(double *)(cur_ptr), *(size_t *)(cur_ptr));
+    }
+    else
+    {
+        DUMP_PRINT("    [i] = %lu elem = %lld (%lx)\n", iteration, *(double *)(cur_ptr), *(size_t *)(cur_ptr));
+    }
+
+    return cur_ptr;
+}
 
 enum stack_errors test_stack()
 {

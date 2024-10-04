@@ -7,7 +7,8 @@
 #ifdef CANARY_PROTECTION
 #define CANARY_HEXSPEAK 0xDEADBABE
 #define CANARY_PROT(...) __VA_ARGS__
-#define DATA_CANARY (stack_elem_t) ((canary_t) CANARY_HEXSPEAK ^ (canary_t) stack->data)
+#define DATA_CANARY ((canary_t) stack->data ^ (canary_t) CANARY_HEXSPEAK)
+#define STACK_CANARY_VALUE ((canary_t) CANARY_HEXSPEAK ^ (canary_t) stack)
 #else
 #define CANARY_PROT(...)
 #endif
