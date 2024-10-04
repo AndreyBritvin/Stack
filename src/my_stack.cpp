@@ -5,17 +5,17 @@
 #include <string.h>
 
 static stack_errors stack_realloc(my_stack_t *stack, stack_state state);
-#ifdef HASH_PROTECTION
-static stack_errors recalc_hash(my_stack_t *stack);
-static hash_t calc_buffer_hash(my_stack_t *stack);
-static hash_t calc_struct_hash(my_stack_t *stack);
 
+#ifdef HASH_PROTECTION
+    static stack_errors recalc_hash(my_stack_t *stack);
+    static hash_t calc_buffer_hash(my_stack_t *stack);
+    static hash_t calc_struct_hash(my_stack_t *stack);
 #endif // HASH_PROTECTION
 
 const char * const BEGIN_DUMP = "[----------------BEGIN STACK_DUMP----------------]";
 const char * const END_DUMP   = "[-----------------END STACK_DUMP-----------------]";
 
-stack_errors stack_dump(my_stack_t *stack, dump_print_t dump_func DEBUG_ON(, const char *filename, const char *funcname, int codeline))
+stack_errors stack_dump(my_stack_t *stack, dump_print_t dump_print_func DEBUG_ON(, const char *filename, const char *funcname, int codeline))
 {
     //STACK_VERIFY(stack);
     DUMP_PRINT("\n%s\n", BEGIN_DUMP);
@@ -63,7 +63,7 @@ stack_errors stack_dump(my_stack_t *stack, dump_print_t dump_func DEBUG_ON(, con
     // void *delta_ptr = stack->data;
     for (size_t i = 0; i < stack->capacity; i++)
     {
-        dump_func(stack->data, i, stack->size, stack->elem_size);
+        dump_print_func(stack->data, i, stack->size, stack->elem_size);
     }
 
     CANARY_PROT(DUMP_PRINT("}\ndata canary #2 = %llx\n", (canary_t)stack->data[stack->capacity]);)
@@ -90,8 +90,12 @@ stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size)
     stack->data = (stack_elem_t *) calloc(el_size * capacity CANARY_PROT(+ sizeof(canary_t) * 2), sizeof(char));
 
     CANARY_PROT(stack->data++;)
-    CANARY_PROT(stack->data[-1]       = (stack_elem_t) DATA_CANARY;)
-    CANARY_PROT(stack->data[capacity] = (stack_elem_t) DATA_CANARY;)
+    // CANARY_PROT(stack->data[-1]       = (stack_elem_t) DATA_CANARY;)
+    // CANARY_PROT(stack->data[capacity] = (stack_elem_t) DATA_CANARY;)
+
+    CANARY_PROT(canary_t temp_can_val = DATA_CANARY;)
+    CANARY_PROT(memcpy(&stack->data[-1],              &temp_can_val, sizeof(canary_t));)
+    CANARY_PROT(memcpy(&stack->data[stack->capacity], &temp_can_val, sizeof(canary_t));)
 
     CANARY_PROT(stack->canary_left  = STACK_CANARY_VALUE;)
     CANARY_PROT(stack->canary_right = STACK_CANARY_VALUE;)
@@ -213,8 +217,12 @@ static stack_errors stack_realloc(my_stack_t *stack, stack_state state)
         return ERROR_STACK_DATA_NULL;
     }
 
-    stack->data[-1]              = (stack_elem_t) DATA_CANARY;
-    stack->data[stack->capacity] = (stack_elem_t) DATA_CANARY;
+    // stack->data[-1]              = (stack_elem_t) DATA_CANARY;
+    // stack->data[stack->capacity] = (stack_elem_t) DATA_CANARY;
+    CANARY_PROT(canary_t temp_can_val = DATA_CANARY;)
+    CANARY_PROT(memcpy(&stack->data[-1],              &temp_can_val, sizeof(canary_t));)
+    CANARY_PROT(memcpy(&stack->data[stack->capacity], &temp_can_val, sizeof(canary_t));)
+
     recalc_hash(stack);
     STACK_VERIFY(stack);
     STACK_DUMP(stack);
