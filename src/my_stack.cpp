@@ -317,8 +317,7 @@ static stack_errors recalc_hash(my_stack_t *stack)
 
 static hash_t calc_struct_hash(my_stack_t *stack)
 {
-    return hash(stack, 0 + CANARY_PROT(+ sizeof(canary_t)) + 2 * sizeof(size_t) + sizeof(stack_elem_t*) +
-                       sizeof(hash_t));
+    return hash(stack, (size_t)((char *)&stack->struct_hash - (char *)stack));
 }
 
 static hash_t calc_buffer_hash(my_stack_t *stack)
