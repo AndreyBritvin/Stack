@@ -21,7 +21,7 @@ enum stack_pos
 };
 
 typedef long long stack_elem_t;
-typedef void *(*dump_print_t)(void *void_begin_ptr, size_t iteration, size_t size, size_t el_size);
+typedef void *(*dump_print_t)(void *void_begin_ptr);
 
 struct my_stack_t
 {
@@ -48,9 +48,15 @@ stack_errors stack_pop (my_stack_t *stack, void *el_to_pop);
 stack_errors stack_push(my_stack_t *stack, void *el_to_push);
 
 stack_errors stack_verify(my_stack_t *stack);
-stack_errors test_stack();
+stack_errors unit_test_stack();
 
-void *print_doubles(void *void_begin_ptr, size_t iteration, size_t size, size_t el_size);
-void *print_longs  (void *void_begin_ptr, size_t iteration, size_t size, size_t el_size);
+void *print_doubles(void *void_begin_ptr);
+void *print_longs  (void *void_begin_ptr);
+
+#ifdef HASH_PROTECTION
+    stack_errors recalc_hash(my_stack_t *stack);
+    hash_t calc_buffer_hash(my_stack_t *stack);
+    hash_t calc_struct_hash(my_stack_t *stack);
+#endif // HASH_PROTECTION
 
 #endif // MY_STACK_H_

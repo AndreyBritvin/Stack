@@ -2,7 +2,7 @@
 
 int main()
 {
-    test_stack();
+    unit_test_stack();
 
     return 0;
 }

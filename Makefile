@@ -26,8 +26,8 @@ CFLAGS = $(HEADERS_INCLUDE) -lm -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -W
 
 all: a.out
 
-a.out: build/main.o build/my_stack.o build/my_stack_protection.o
-	@$(CC) $(CFLAGS) build/main.o build/my_stack.o build/my_stack_protection.o
+a.out: build/main.o build/my_stack.o build/my_stack_protection.o build/my_stack_print.o
+	@$(CC) $(CFLAGS) build/main.o build/my_stack.o build/my_stack_protection.o build/my_stack_print.o
 
 build/main.o: src/main.cpp
 	@$(CC) $(CFLAGS) -c src/main.cpp -o build/main.o
@@ -37,6 +37,9 @@ build/my_stack.o: src/my_stack.cpp include/my_stack.h
 
 build/my_stack_protection.o: src/my_stack_protection.cpp include/my_stack_protection.h
 	@$(CC) $(CFLAGS) -c src/my_stack_protection.cpp -o build/my_stack_protection.o
+
+build/my_stack_print.o: src/my_stack_print.cpp include/my_stack.h
+	@$(CC) $(CFLAGS) -c src/my_stack_print.cpp -o build/my_stack_print.o
 
 run:
 	./a.out
