@@ -30,6 +30,7 @@ struct my_stack_t
     size_t          capacity;
     size_t         elem_size;
     void *              data;
+    void *      poison_value;
     dump_print_t  print_func;
     HASH_PROT(hash_t buffer_hash;)
     HASH_PROT(hash_t struct_hash;) // no hash after this var
@@ -41,7 +42,7 @@ static const int ALLOC_CONST = 2;
 static const int STACK_POISON_VALUE = 'DEDNELOH';
 
 stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const char *funcname, int codeline));
-stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size, dump_print_t dump_func);
+stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size, dump_print_t dump_func, void *poison_val);
 stack_errors stack_dtor(my_stack_t *stack);
 
 stack_errors stack_pop (my_stack_t *stack, void *el_to_pop);
