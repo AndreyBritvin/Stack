@@ -215,6 +215,11 @@ stack_errors stack_verify(my_stack_t *stack)
         return ERROR_PRINT_FUNC_IS_NULL;
     }
 
+    if (stack->poison_value == NULL)
+    {
+        return ERROR_POISON_VALUE_PTR_IS_NULL;
+    }
+
     CANARY_PROT(
     if (stack->canary_left != STACK_CANARY_VALUE || stack->canary_right != STACK_CANARY_VALUE)
     {

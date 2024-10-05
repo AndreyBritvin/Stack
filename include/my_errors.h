@@ -15,6 +15,7 @@ enum stack_errors
     ERROR_HASH_IN_BUFFER        =  9,
     ERROR_STACK_UNDERFLOW       = 10,
     ERROR_PRINT_FUNC_IS_NULL    = 11,
+    ERROR_POISON_VALUE_PTR_IS_NULL = 12,
 };
 
 /*
