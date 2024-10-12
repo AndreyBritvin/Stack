@@ -4,9 +4,12 @@
 #include <assert.h>
 #include <string.h>
 
+static FILE *LOG_FILE = fopen("my_log.log", "w");
+
 static stack_errors stack_realloc(my_stack_t *stack, stack_state state);
+
 #ifdef CANARY_PROTECTION
-static stack_errors set_data_canaries(my_stack_t *stack);
+    static stack_errors set_data_canaries(my_stack_t *stack);
 #endif // CANARY_PROTECTION
 
 stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size, dump_print_t dump_func, void *poison_val)
@@ -72,7 +75,7 @@ stack_errors stack_dtor(my_stack_t *stack)
 
 
 
-stack_errors stack_pop(my_stack_t *stack, void *el_to_pop) // TODO:
+stack_errors stack_pop(my_stack_t *stack, void *el_to_pop)
 {
     assert(el_to_pop != NULL);
 

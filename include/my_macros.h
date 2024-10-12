@@ -8,8 +8,8 @@
 
 #ifdef DEBUG
     #define DEBUG_ON(...) __VA_ARGS__
-    #define DEBUG_PRINT(...) fprintf(stdout, __VA_ARGS__);
-    #define DUMP_PRINT(text,...) fprintf(stdout, text, __VA_ARGS__);
+    #define DEBUG_PRINT(...) fprintf(LOG_FILE, __VA_ARGS__);
+    #define DUMP_PRINT(text,...) fprintf(LOG_FILE, text, __VA_ARGS__);
     #define STACK_DUMP(stack) stack_dump(stack, __FILE__, __func__, __LINE__)
     #define BEGIN_VERIFY stack_errors ST_ERR = SUCCESS;
     #define STACK_VERIFY(stack_) ST_ERR = SUCCESS; if((ST_ERR = stack_verify(stack_)) != SUCCESS){return ST_ERR;}

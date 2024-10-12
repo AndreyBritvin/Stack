@@ -8,6 +8,8 @@
 const char * const BEGIN_DUMP = "[----------------BEGIN STACK_DUMP----------------]";
 const char * const END_DUMP   = "[-----------------END STACK_DUMP-----------------]";
 
+static FILE *LOG_FILE = fopen("my_log.log", "w");
+
 stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const char *funcname, int codeline))
 {
     //STACK_VERIFY(stack);
