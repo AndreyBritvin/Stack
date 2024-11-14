@@ -39,7 +39,13 @@ struct my_stack_t
 };
 
 static const int ALLOC_CONST = 2;
-static const int STACK_POISON_VALUE = 'DEDNELOH';
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wlarger-than="
+
+static const long long STACK_POISON_VALUE = 'DEDNELOH';
+
+#pragma GCC diagnostic pop
 
 stack_errors stack_dump(my_stack_t *stack DEBUG_ON(, const char *filename, const char *funcname, int codeline));
 stack_errors stack_ctor(my_stack_t *stack, size_t capacity, size_t el_size, dump_print_t dump_func, void *poison_val);

@@ -97,7 +97,7 @@ stack_errors stack_pop(my_stack_t *stack, void *el_to_pop)
                                                                 stack->elem_size);
     stack->size--;
 
-    recalc_hash(stack);
+    HASH_PROT(recalc_hash(stack);)
 
     if (stack->size <= stack->capacity / (2 * ALLOC_CONST))
     {
@@ -185,7 +185,7 @@ static stack_errors stack_realloc(my_stack_t *stack, stack_state state)
 
     CANARY_PROT(set_data_canaries(stack);)
 
-    recalc_hash(stack);
+    HASH_PROT(recalc_hash(stack);)
     STACK_VERIFY(stack);
     STACK_DUMP(stack);
 
